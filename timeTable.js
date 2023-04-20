@@ -79,7 +79,7 @@ class SimpleTable extends Table {
     const tbody = document.createElement('tbody');
     const tr = document.createElement('tr');
     const subjectByTime = Setting.getSubjectsByTime();
-    subjectByTime.length != 0 && Setting.getSubjectsByTime()[weekIndex].forEach((sub, idx) => {
+    subjectByTime.length != 0 && subjectByTime[weekIndex] && subjectByTime[weekIndex].forEach((sub, idx) => {
       const td = ElementCreator.makeClickableTd(sub+'', sub.teacher);
       if(idx == currentClass-1) td.classList.add('lin-highlight1');
       tr.appendChild(td);

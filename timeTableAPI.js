@@ -111,7 +111,7 @@ export class Setting {
         .setSubjects(...subjects)
     );
   }
-  static setClassTime(className, hours, minutes) {
+  static setClassStartTime(className, hours, minutes) {
     Setting.getInstance().classTimes[className] = [hours, minutes];
   }
 }

@@ -345,21 +345,21 @@ class MoakTestNoti {
 const getElapsedTime = (fromHour, fromMinute, toHour, toMinute) => ((toHour-fromHour)*60) + toMinute-fromMinute;
 const getDuration = (previousTime, currentTime) => (currentTime[0] -previousTime[0])*60 +currentTime[1] -previousTime[1];
 const checkUndefinedInClassTime = () => {
-  for(const time of Setting.getClassStartTimes())
+  for(const time of Setting.getClassTimes())
     if(time == undefined) return false;
   return true;
 };
 const getEmptyElement = () => {
-  return Object.keys(ClassName)[Setting.getClassStartTimes().findIndex(v => !v)];
+  return Object.keys(ClassName)[Setting.getClassTimes().findIndex(v => !v)];
 }
-const getClassStartTimes = () => {
+const getClassTimes = () => {
   if(!checkUndefinedInClassTime()) throw new Error(`${getEmptyElement()} in Setting.ClassTimes is not set. Set through Setting.setClassTime method.`);
   const copiedArray = [];
-  Setting.getClassStartTimes().forEach(time => copiedArray.push([...time]));
+  Setting.getClassTimes().forEach(time => copiedArray.push([...time]));
   return copiedArray;
 };
 const getTimeAndDuration = () => {
-  const classTimes = getClassStartTimes();
+  const classTimes = getClassTimes();
   for(const [idx, time] of Object.entries(classTimes)) {
     if(idx != 0) {
       const dur = getDuration(classTimes[idx-1], time);

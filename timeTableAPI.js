@@ -93,7 +93,7 @@ export class Setting {
   static getExamList() {
     return Setting.getInstance().examList;
   }
-  static getClassStartTimes() {
+  static getClassTimes() {
     return Setting.getInstance().classTimes;
   }
   static addMoakTest(dateFormat) {
@@ -111,7 +111,7 @@ export class Setting {
         .setSubjects(...subjects)
     );
   }
-  static setClassStartTime(className, hours, minutes) {
+  static setClassTime(className, hours, minutes) {
     Setting.getInstance().classTimes[className] = [hours, minutes];
   }
 }

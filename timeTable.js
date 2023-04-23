@@ -1,8 +1,8 @@
 'use strict'
 
-import { Setting, SelfStudy } from "./timeTableAPI.js";
+import { Setting, SelfStudy } from './timeTableAPI.js';
 
-const weekName = ["월", "화", "수", "목", "금"];
+const weekName = ['월', '화', '수', '목', '금'];
 const toWeekdayPreiod = index => {
   if(index > 0 && index < 6) return index-1;
   return -1;
@@ -314,8 +314,27 @@ const classTimes = [
   [14, 0, 60], // free time and 6th class (14:00~, 15:00)
   [15, 0, 60]  // free time and 7th class (15:00~, 16:00)
 ]
+
+const getDuration = (previousTime, currentTime) => (currentTime - previousTime)*60 + currentTime - previousTime;
+
+// export $const getClassTimesAndDurations = () => {
+//   const durations = [];
+//   for(let i=1;i<ct.length;i++)
+//     durations.push(
+//       getDuration(ct[i-1], ct[i])
+//       );
+  
+//   const ct = Setting.getClassTimes()
+//   for([time, index] in Object.entries(ct)) {
+//     console.log(time[0], time[1])
+//     if(indx != 0) console.log(getDuration(ct[index-1], ct[index]));
+//   }
+
+// }
 const getClassIndex = (hour, minute) => {
   let returnIndex = -1;
+
+  
   classTimes.forEach(([startHour, startMinutes, duration], index) => {
     const pre = getElapsedTime(startHour, startMinutes, hour, minute);
     if(pre >=0 && pre < duration) returnIndex = index+1;
@@ -354,7 +373,7 @@ const render = () => {
 const schoolTime = { hours: 16, minutes: 0, seconds: 0 }
 const updateSchoolTimeBar = ({hours, minutes, seconds}) => {
   const fix = number => number.toFixed(1);
-  const footer = document.getElementById("footer");
+  const footer = document.getElementById('footer');
   const sumTime = (function() {
     const untilHours = schoolTime.hours - hours;
     const untilMinutes = schoolTime.minutes - minutes;
@@ -363,8 +382,24 @@ const updateSchoolTimeBar = ({hours, minutes, seconds}) => {
   })();
   if (sumTime >= 0) footer.innerHTML = `하교까지 약 <span>${fix(sumTime/3600)}</span>시간 = <span>${fix(sumTime/60)}</span>분 = <span>${sumTime}</span>초 남았다!`
 }
+const getBaseDocument = () => {
+  return `
+<header>
+  <p id="title" class="lin">&lt Time Table &gt</p>
+</header>
+<main id="main">
+  <p id="text_time" class="lin"></p>
+  <table id="today_time_table"></table>
+  <table id="time_table"></table>
+  <table id="exam_time_table"></table>
+  <div id="moak_test_noti"></div>
+</main>
+<footer><p id="footer"></p></footer>
+<p>hello world</p>`;
+}
 // load page
 export const load = () => {
+  document.body.innerHTML = getBaseDocument();
   ExamTable.reload();
   MoakTestNoti.reload();
   setInterval(render, 1);

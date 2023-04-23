@@ -77,6 +77,7 @@ export class Setting {
     this.mockTests = [];
     this.subjectsByTime = [];
     this.examList = [];
+    this.classTimes = new Array(8);
     Setting.instance = this;
   }
   static getInstance() {
@@ -91,6 +92,9 @@ export class Setting {
   }
   static getExamList() {
     return Setting.getInstance().examList;
+  }
+  static getClassTimes() {
+    return Setting.getInstance().classTimes;
   }
   static addMockTest(dateFormat) {
     Setting.getInstance().mockTests.push(new Date(dateFormat));
@@ -107,8 +111,12 @@ export class Setting {
         .setSubjects(...subjects)
     );
   }
+  static setClassTime(className, hours, minutes) {
+    Setting.getInstance().classTimes[className] = [hours, minutes];
+  }
 }
 export const Day = { MONDAY: 0, THEUSDAY: 1, WEDNESDAY: 2, THURSDAY: 3, FIRDAY: 4 };
+export const ClassName = { CLASS1: 0 , CLASS2: 1 , CLASS3: 2, CLASS4: 3, LUNCH: 4, CLASS5: 5, CLASS6: 6, CLASS7: 7 };
 
 export const SelfStudy = Symbol('selfStudy');
 

@@ -84,7 +84,7 @@ export class Setting {
     if(!this.instance) this.instance = new Setting();
     return this.instance;
   }
-  static getMockTests() {
+  static getMoakTests() {
     return Setting.getInstance().mockTests;
   }
   static getSubjectsByTime() {
@@ -93,10 +93,10 @@ export class Setting {
   static getExamList() {
     return Setting.getInstance().examList;
   }
-  static getClassTimes() {
+  static getClassStartTimes() {
     return Setting.getInstance().classTimes;
   }
-  static addMockTest(dateFormat) {
+  static addMoakTest(dateFormat) {
     Setting.getInstance().mockTests.push(new Date(dateFormat));
   }
   static group(...subjects) {
@@ -122,14 +122,3 @@ export const SelfStudy = Symbol('selfStudy');
 
 import { load } from './timeTable.js'
 export const loadPage = load;
-
-/* Importable Object
-Subject
-SubjectList
-SubffixType
-ExamAttribute
-Setting
-Day
-SelfStudy
-load
-*/

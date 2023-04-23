@@ -1,6 +1,6 @@
 'use strict'
 
-import { Setting, SelfStudy } from './timeTableAPI.js';
+import { Setting, SelfStudy, ClassName } from './timeTableAPI.js';
 
 const weekName = ['월', '화', '수', '목', '금'];
 const toWeekdayPreiod = index => {
@@ -285,7 +285,7 @@ class MoakTestNoti {
     return Math.ceil(timeDiff / (1000*60*60*24));
   }
   getFastestDDay() {
-    for(const mockTest of Setting.getMockTests()) {
+    for(const mockTest of Setting.getMoakTests()) {
       const dDay = this.getDDay(mockTest);
       if(dDay >= 0) return {
         date: mockTest.toLocaleDateString('ko-KR', this.options),
@@ -294,51 +294,87 @@ class MoakTestNoti {
     }
     return null;
   }
+  makeAllMoaksWindow() {
+    const popupDiv = document.createElement('div');
+    popupDiv.id = 'popup';
+
+    const textDiv = document.createElement('div');
+    textDiv.classList.add('text');
+
+    const header = document.createElement('header');
+    header.appendChild(createElementWithText('div', '모의고사'));
+    const button = document.createElement('button');
+    button.appendChild(document.createElement('div'));
+    button.appendChild(document.createElement('div'));
+    button.onclick = () => popupDiv.remove();
+    header.appendChild(button);
+    textDiv.appendChild(header);
+
+    const main = document.createElement('main');
+    const moakListUl = document.createElement('ul');
+    moakListUl.id = 'range';
+    for(const time of Setting.getMoakTests())
+      moakListUl.appendChild(
+        createElementWithText('li', `${time.toLocaleDateString('ko-KR', this.options)}: D-day ${this.getDDay(time)}일`));
+    main.appendChild(moakListUl);
+    textDiv.appendChild(main);
+
+    popupDiv.appendChild(textDiv);
+    return popupDiv;
+  }
   static reload() {
+    if((Setting.getMoakTests().length == 0)) return;
     const dDay = MoakTestNoti.getInstance().getFastestDDay();
-    if(dDay == null) return;
+
     const mockTestNotiDiv = document.querySelector('#moak_test_noti');
+    mockTestNotiDiv.addEventListener('click',
+      () =>
+        document.querySelector('#main').appendChild(
+          MoakTestNoti.getInstance().makeAllMoaksWindow()));
+    if(dDay == null && Setting.getMoakTests().length != 0) {
+      const titleDiv = createElementWithText('div', `[모의고사 모두보기 ▾]`);
+      mockTestNotiDiv.replaceChildren(titleDiv);
+      return;
+    }
     const titleDiv = createElementWithText('div', `모의고사 ${dDay.date}`);
     const dDayDiv = createElementWithText('div', `D-day ${dDay.dDay}일`);
     mockTestNotiDiv.replaceChildren(titleDiv, dDayDiv);
+
   }
 }
 const getElapsedTime = (fromHour, fromMinute, toHour, toMinute) => ((toHour-fromHour)*60) + toMinute-fromMinute;
-//[start hours, start minutes, duration]
-const classTimes = [
-  [8, 0, 80], // Morning time and 1st class (8:00~9:20)
-  [9, 20, 60], // free time and 2nd class (9:20~10:20)
-  [10, 20, 60], // free time and 3rd class (10:20~11:20)
-  [11, 20, 60], // free time and 4th class (11:20~12:20)
-  [12, 20, 100], // lunch time(12:20~13:10) and 5th class(13:10~14:00) (12:20~14:00)
-  [14, 0, 60], // free time and 6th class (14:00~, 15:00)
-  [15, 0, 60]  // free time and 7th class (15:00~, 16:00)
-]
-
-const getDuration = (previousTime, currentTime) => (currentTime - previousTime)*60 + currentTime - previousTime;
-
-// export $const getClassTimesAndDurations = () => {
-//   const durations = [];
-//   for(let i=1;i<ct.length;i++)
-//     durations.push(
-//       getDuration(ct[i-1], ct[i])
-//       );
-  
-//   const ct = Setting.getClassTimes()
-//   for([time, index] in Object.entries(ct)) {
-//     console.log(time[0], time[1])
-//     if(indx != 0) console.log(getDuration(ct[index-1], ct[index]));
-//   }
-
-// }
+const getDuration = (previousTime, currentTime) => (currentTime[0] -previousTime[0])*60 +currentTime[1] -previousTime[1];
+const checkUndefinedInClassTime = () => {
+  for(const time of Setting.getClassStartTimes())
+    if(time == undefined) return false;
+  return true;
+};
+const getEmptyElement = () => {
+  return Object.keys(ClassName)[Setting.getClassStartTimes().findIndex(v => !v)];
+}
+const getClassStartTimes = () => {
+  if(!checkUndefinedInClassTime()) throw new Error(`${getEmptyElement()} in Setting.ClassTimes is not set. Set through Setting.setClassTime method.`);
+  const copiedArray = [];
+  Setting.getClassStartTimes().forEach(time => copiedArray.push([...time]));
+  return copiedArray;
+};
+const getTimeAndDuration = () => {
+  const classTimes = getClassStartTimes();
+  for(const [idx, time] of Object.entries(classTimes)) {
+    if(idx != 0) {
+      const dur = getDuration(classTimes[idx-1], time);
+      if(dur <= 0) throw new Error('Invalid class time order. Class times should be in chronological order.');
+      classTimes[idx-1].push(dur);
+    }
+  }
+  return classTimes.slice(0, classTimes.length-1);
+}
 const getClassIndex = (hour, minute) => {
   let returnIndex = -1;
-
-  
-  classTimes.forEach(([startHour, startMinutes, duration], index) => {
+  getTimeAndDuration().forEach(([startHour, startMinutes, duration], index) => {
     const pre = getElapsedTime(startHour, startMinutes, hour, minute);
     if(pre >=0 && pre < duration) returnIndex = index+1;
-  })
+  });
   return returnIndex;
 }
 const Previouis = { currentClass: -100, weekIndex: -100 };
@@ -394,8 +430,7 @@ const getBaseDocument = () => {
   <table id="exam_time_table"></table>
   <div id="moak_test_noti"></div>
 </main>
-<footer><p id="footer"></p></footer>
-<p>hello world</p>`;
+<footer><p id="footer"></p></footer>`;
 }
 // load page
 export const load = () => {

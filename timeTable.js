@@ -92,9 +92,6 @@ class Table {
     this.id = id;
     this.caption = caption;
   }
-
-  makeHead() {}
-  makeBody() {}
 }
 class SimpleTable extends Table {
   constructor(id, caption) {
@@ -107,7 +104,9 @@ class SimpleTable extends Table {
     return this.instance;
   }
   getClassNumber(weekIndex) {
-    return (Setting.getSubjectsByTime()[weekIndex]) ? Setting.getSubjectsByTime()[weekIndex].length : [];
+    return Setting.getSubjectsByTime()[weekIndex]
+      ? Setting.getSubjectsByTime()[weekIndex].length
+      : [];
   }
   makeHead(weekIndex, currentClass) {
     const thead = document.createElement('thead');
@@ -351,11 +350,9 @@ const checkUndefinedInClassTime = () => {
     if(time == undefined) return false;
   return true;
 };
-const getEmptyElement = () => {
-  return Object.keys(ClassName)[Setting.getClassTimes().findIndex(v => !v)];
-}
+// const getEmptyElement = () => Object.keys(ClassName)[Setting.getClassTimes().findIndex(v => !v)];
 const getClassTimes = () => {
-  if(!checkUndefinedInClassTime()) throw new Error(`${getEmptyElement()} in Setting.ClassTimes is not set. Set through Setting.setClassTime method.`);
+  if(!checkUndefinedInClassTime()) return []; // throw new Error(`${getEmptyElement()} in Setting.ClassTimes is not set. Set through Setting.setClassTime method.`);
   const copiedArray = [];
   Setting.getClassTimes().forEach(time => copiedArray.push([...time]));
   return copiedArray;
@@ -432,7 +429,8 @@ const getBaseDocument = () => {
   <table id="exam_time_table"></table>
   <div id="moak_test_noti"></div>
 </main>
-<footer><p id="footer"></p></footer>`;
+<footer><p id="footer"></p></footer>
+`;
 }
 // load page
 export const load = () => {

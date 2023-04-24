@@ -116,7 +116,7 @@ export class Setting {
   }
 }
 export const Day = { MONDAY: 0, THEUSDAY: 1, WEDNESDAY: 2, THURSDAY: 3, FIRDAY: 4 };
-export const ClassName = { CLASS1: 0 , CLASS2: 1 , CLASS3: 2, CLASS4: 3, LUNCH: 4, CLASS5: 5, CLASS6: 6, CLASS7: 7 };
+export const ClassName = { CLASS1: 0 , CLASS2: 1 , CLASS3: 2, CLASS4: 3, CLASS5: 4, CLASS6: 5, CLASS7: 6, END: 7 };
 
 export const SelfStudy = Symbol('selfStudy');
 

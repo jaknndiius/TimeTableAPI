@@ -1,7 +1,11 @@
 'use strict'
 
 import { Setting, SelfStudy, ClassName } from './timeTableAPI.js';
-
+Array.prototype.removeEmpty = function() { 
+  const relis = [];
+  this.forEach(ele => relis.push(ele));
+  return relis
+}
 const weekName = ['월', '화', '수', '목', '금'];
 const toWeekdayPreiod = index => {
   if(index > 0 && index < 6) return index-1;
@@ -43,6 +47,44 @@ const ElementCreator = {
     td.appendChild(ElementCreator.makeClickableSubject(subjectName));
     td.appendChild(ElementCreator.makeClickableTeacher(teacherName));
     return td;
+  },
+  makeModalWindow: (title, paragraphs, footer) => {
+    const popupDiv = document.createElement('div');
+    popupDiv.id = 'popup';
+
+    const textDiv = document.createElement('div');
+    textDiv.classList.add('text');
+
+    const header = document.createElement('header');
+    header.appendChild(createElementWithText('div', title));
+    const button = document.createElement('button');
+    button.appendChild(document.createElement('div'));
+    button.appendChild(document.createElement('div'));
+    button.onclick = () => popupDiv.remove();
+    header.appendChild(button);
+    textDiv.appendChild(header);
+
+    const main = document.createElement('main');
+    const paragraphUl = document.createElement('ul');
+    paragraphUl.classList.add('paragraph');
+    paragraphs.forEach(p =>
+      paragraphUl.appendChild(
+        createElementWithText('li', p)));
+    main.appendChild(paragraphUl);
+
+    if(footer) {
+      const footerUl = document.createElement('ul');
+      footerUl.classList.add('footer');
+      footer.forEach(f => footerUl.appendChild(
+        createElementWithText('li', f)));
+      main.appendChild(footerUl);
+    }
+    textDiv.appendChild(main);
+    popupDiv.appendChild(textDiv);
+    return popupDiv;
+  },
+  popup: modal => {
+    document.querySelector('#main').appendChild(modal);
   }
 }
 class Table {
@@ -64,12 +106,15 @@ class SimpleTable extends Table {
     if(!this.instance) this.instance = new SimpleTable('today_time_table', '오늘의 시간표');
     return this.instance;
   }
-  makeHead(currentClass) {
+  getClassNumber(weekIndex) {
+    return (Setting.getSubjectsByTime()[weekIndex]) ? Setting.getSubjectsByTime()[weekIndex].length : [];
+  }
+  makeHead(weekIndex, currentClass) {
     const thead = document.createElement('thead');
     const tr = document.createElement('tr');
-    for(let i=0;i<7;i++) {
-      const th = createElementWithText('th', (i+1) + '교시');
-      if(i == currentClass-1) th.classList.add('lin-highlight1');
+    for(let i = 1; i <= this.getClassNumber(weekIndex); i++) {
+      const th = createElementWithText('th', i + '교시');
+      i == currentClass && th.classList.add('lin-highlight1');
       tr.appendChild(th);
     }
     thead.appendChild(tr);
@@ -99,7 +144,7 @@ class SimpleTable extends Table {
     if(weekIndex == -1) table.replaceChildren(instance.makeHoliday())
     else table.replaceChildren(
           createElementWithText('caption', instance.caption),
-          instance.makeHead(currentClass),
+          instance.makeHead(weekIndex, currentClass),
           instance.makeBody(weekIndex, currentClass));
   }
 }
@@ -113,22 +158,32 @@ class MainTable extends Table {
     if(!this.instance) this.instance = new MainTable('time_table', 'Time Table');
     return this.instance;
   }
+  getMaxClassNumber() {
+    return Math.max(...Setting.getSubjectsByTime().removeEmpty().map(s => s.length));
+  }
   makeRow(weekIndex, subjects, highlight) {
     const tr = document.createElement('tr');
     if(highlight) tr.classList.add('lin-highlight2');
     tr.appendChild(
       createElementWithText('th', weekName[weekIndex] + '요일'));
-    subjects && subjects.forEach(sub =>
-      tr.appendChild(ElementCreator.makeClickableTd(sub+'', sub.teacher)));
+    if(subjects) {
+      for(let i=0;i<this.getMaxClassNumber();i++) {
+        const subject = subjects[i];
+        tr.appendChild(
+          subject
+          ? ElementCreator.makeClickableTd(subject+'', subject.teacher)
+          : tr.appendChild(createElementWithText('td', '-')));
+      }
+    }
     return tr;
   }
   makeHead() {
     const thead = document.createElement('thead');
     const tr = document.createElement('tr');
     tr.appendChild(document.createElement('th'));
-    for(let i=0;i<7;i++)
+    for(let i=1;i<=this.getMaxClassNumber();i++)
       tr.appendChild(
-        createElementWithText('th', (i+1) + '교시'));
+        createElementWithText('th', i + '교시'));
     thead.appendChild(tr);
     return thead;
   }
@@ -160,55 +215,21 @@ class ExamTable extends Table {
     return this.instance;
   }
   koreanDay = ['첫째날', '둘째날', '셋째날', '넷째날'];
+  nonExamInfoList = ['시험 정보가 업데이트 되지 않았습니다.', '시험 정보를 제공해 주세요 :)', '시험 정보가 제공되면 객관식 밑 서술형 문항 갯수와 시험 범위를 확인하실 수 있습니다.'];
   makeModalWindow(subject) {
     const attribute = subject.examAttribute;
-    const popupDiv = document.createElement('div');
-    popupDiv.id = 'popup';
-
-    const textDiv = document.createElement('div');
-    textDiv.classList.add('text');
-
-    const header = document.createElement('header');
-    header.appendChild(createElementWithText('div', subject));
-    const button = document.createElement('button');
-    button.appendChild(document.createElement('div'));
-    button.appendChild(document.createElement('div'));
-    button.onclick = () => popupDiv.remove();
-    header.appendChild(button);
-    textDiv.appendChild(header);
-
-    const main = document.createElement('main');
-    const rangeUl = document.createElement('ul');
-    rangeUl.id = 'range';
-    if(attribute == undefined) {
-      rangeUl.append(createElementWithText('li', '시험 정보가 업데이트 되지 않았습니다.'));
-      rangeUl.append(createElementWithText('li', '시험 정보를 제공해 주세요 :)'));
-      rangeUl.append(createElementWithText('li', '시험 정보가 제공되면 객관식 밑 서술형 문항 갯수와 시험 범위를 확인하실 수 있습니다.'));
-    }
-    else
-      for(const range of attribute.ranges)
-        rangeUl.appendChild(
-          createElementWithText('li', range));
-    main.appendChild(rangeUl);
-    const questionsNumberUl = document.createElement('ul');
-    questionsNumberUl.id = 'questions_number';
-    if(attribute) {
-      attribute.selective > 0 &&
-      questionsNumberUl.appendChild(
-        createElementWithText('li', `객관식 ${attribute.selective}개`));
-    attribute.descriptive > 0 &&
-      questionsNumberUl.appendChild(
-        createElementWithText('li', `서술형 ${attribute.descriptive}개`));
-    }
-    main.appendChild(questionsNumberUl);
-    textDiv.appendChild(main);
-
-    popupDiv.appendChild(textDiv);
-    return popupDiv;
+    const paragraphs =
+      attribute
+      ? attribute.ranges
+      : this.nonExamInfoList;
+    const footer =
+      attribute
+      ?  [`객관식 ${attribute.selective}개`, `서술형 ${attribute.descriptive}개`]
+      : null;
+    return ElementCreator.makeModalWindow(subject, paragraphs, footer);
   }
   onExamTdClicked(subject) {
-    document.querySelector('#main').appendChild(
-      this.makeModalWindow(subject));
+    ElementCreator.popup(this.makeModalWindow(subject));
   }
   formatDate(day) {
     return `${day.getMonth()+1}/${day.getDate()} ${weekName[day.getDay()-1] || ''}`;
@@ -294,33 +315,14 @@ class MoakTestNoti {
     }
     return null;
   }
+  formetTimeAndDDay(time) {
+    return `${time.toLocaleDateString('ko-KR', this.options)}: D-day ${this.getDDay(time)}일`;
+  }
   makeAllMoaksWindow() {
-    const popupDiv = document.createElement('div');
-    popupDiv.id = 'popup';
-
-    const textDiv = document.createElement('div');
-    textDiv.classList.add('text');
-
-    const header = document.createElement('header');
-    header.appendChild(createElementWithText('div', '모의고사'));
-    const button = document.createElement('button');
-    button.appendChild(document.createElement('div'));
-    button.appendChild(document.createElement('div'));
-    button.onclick = () => popupDiv.remove();
-    header.appendChild(button);
-    textDiv.appendChild(header);
-
-    const main = document.createElement('main');
-    const moakListUl = document.createElement('ul');
-    moakListUl.id = 'range';
-    for(const time of Setting.getMoakTests())
-      moakListUl.appendChild(
-        createElementWithText('li', `${time.toLocaleDateString('ko-KR', this.options)}: D-day ${this.getDDay(time)}일`));
-    main.appendChild(moakListUl);
-    textDiv.appendChild(main);
-
-    popupDiv.appendChild(textDiv);
-    return popupDiv;
+    ;
+    return ElementCreator.makeModalWindow(
+      '모의고사',
+      Setting.getMoakTests().map(time => this.formetTimeAndDDay(time)));
   }
   static reload() {
     if((Setting.getMoakTests().length == 0)) return;
@@ -328,9 +330,9 @@ class MoakTestNoti {
 
     const mockTestNotiDiv = document.querySelector('#moak_test_noti');
     mockTestNotiDiv.addEventListener('click',
-      () =>
-        document.querySelector('#main').appendChild(
-          MoakTestNoti.getInstance().makeAllMoaksWindow()));
+      () => ElementCreator.popup(
+        MoakTestNoti.getInstance().makeAllMoaksWindow()
+      ));
     if(dDay == null && Setting.getMoakTests().length != 0) {
       const titleDiv = createElementWithText('div', `[모의고사 모두보기 ▾]`);
       mockTestNotiDiv.replaceChildren(titleDiv);

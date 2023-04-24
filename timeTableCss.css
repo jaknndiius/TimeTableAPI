@@ -173,31 +173,31 @@ th.lin-highlight1,
 #popup .text main ul {
   margin-top: var(--font-size-small);
 }
-#popup .text main ul#range {
+#popup .text main ul.paragraph {
   list-style: '👉 ';
   margin-left: var(--font-size-bold);
   font-size: var(--font-size-default);
 }
-#popup .text main ul#questions_number {
+#popup .text main ul.paragraph li {
+  text-align: start;
+}
+#popup .text main ul.footer {
   list-style: none;
   font-size: var(--font-size-small);
   display: flex;
 }
-#popup .text main ul#questions_number li:before {
+#popup .text main ul.footer li:before {
   content: '✔ ';
 }
-#popup .text main ul#questions_number li:last-child:before {
+#popup .text main ul.footer li:last-child:before {
   color: rgb(42, 107, 164);
 }
-#popup .text main ul#questions_number li:first-child:before {
+#popup .text main ul.footer li:first-child:before {
   color: rgb(59, 169, 42);
 }
-#popup .text main ul#questions_number li {
+#popup .text main ul.footer li {
   margin-right: var(--font-size-small);
   color: rgb(55, 55, 55);
-}
-#popup .text main ul#range li {
-  text-align: start;
 }
 #moak_test_noti {
   margin-top: 20px;

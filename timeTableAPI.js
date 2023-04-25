@@ -96,6 +96,9 @@ export class Setting {
   static getClassTimes() {
     return Setting.getInstance().classTimes;
   }
+  static getCSAT() {
+    return Setting.getInstance().CSAT;
+  }
   static addMoakTest(dateFormat) {
     Setting.getInstance().mockTests.push(new Date(dateFormat));
   }
@@ -114,6 +117,9 @@ export class Setting {
   static setClassTime(className, hours, minutes) {
     Setting.getInstance().classTimes[className] = [hours, minutes];
   }
+  static setCSAT(csatDay) {
+    Setting.getInstance().CSAT = new Date(csatDay);
+  } 
 }
 export const Day = { MONDAY: 0, THEUSDAY: 1, WEDNESDAY: 2, THURSDAY: 3, FIRDAY: 4 };
 export const ClassName = { CLASS1: 0 , CLASS2: 1 , CLASS3: 2, CLASS4: 3, CLASS5: 4, CLASS6: 5, CLASS7: 6, END: 7 };

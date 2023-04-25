@@ -317,26 +317,47 @@ class MoakTestNoti {
   formetTimeAndDDay(time) {
     return `${time.toLocaleDateString('ko-KR', this.options)}: D-day ${this.getDDay(time)}일`;
   }
+  getTestList() {
+    const testList = Setting.getMoakTests().map(time => this.formetTimeAndDDay(time));
+    Setting.getCSAT() && testList.push(`수능: ${this.formetTimeAndDDay(Setting.getCSAT())}`);
+    return testList;
+  }
   makeAllMoaksWindow() {
-    ;
     return ElementCreator.makeModalWindow(
-      '모의고사',
-      Setting.getMoakTests().map(time => this.formetTimeAndDDay(time)));
+      (Setting.getMoakTests().length == 0)
+      ? '수능'
+      : (Setting.getCSAT())
+        ? '모의고사 및 수능'
+        :'모의고사',
+      this.getTestList()
+      );
   }
   static reload() {
-    if((Setting.getMoakTests().length == 0)) return;
-    const dDay = MoakTestNoti.getInstance().getFastestDDay();
+    const instance = MoakTestNoti.getInstance();
+    if((instance.getTestList().length == 0)) return;
+    const dDay = instance.getFastestDDay();
 
     const mockTestNotiDiv = document.querySelector('#moak_test_noti');
     mockTestNotiDiv.addEventListener('click',
       () => ElementCreator.popup(
-        MoakTestNoti.getInstance().makeAllMoaksWindow()
+        instance.makeAllMoaksWindow()
       ));
-    if(dDay == null && Setting.getMoakTests().length != 0) {
-      const titleDiv = createElementWithText('div', `[모의고사 모두보기 ▾]`);
-      mockTestNotiDiv.replaceChildren(titleDiv);
-      return;
+    if(dDay == null) {
+      if(Setting.getMoakTests().length != 0) {
+        const titleDiv = createElementWithText('div', 
+        Setting.getCSAT()
+        ? '[모의고사 및 수능 모두보기 ▾]'
+        : '[모의고사 모두보기 ▾');
+        mockTestNotiDiv.replaceChildren(titleDiv);
+        return;
+      } else if(Setting.getMoakTests().length == 0) {
+        const titleDiv = createElementWithText('div', `수능 ${Setting.getCSAT().toLocaleDateString('ko-KR', instance.options)}`);
+        const dDayDiv = createElementWithText('div', `D-day ${instance.getDDay(Setting.getCSAT())}일`);
+        mockTestNotiDiv.replaceChildren(titleDiv, dDayDiv);
+        return;
+      }
     }
+
     const titleDiv = createElementWithText('div', `모의고사 ${dDay.date}`);
     const dDayDiv = createElementWithText('div', `D-day ${dDay.dDay}일`);
     mockTestNotiDiv.replaceChildren(titleDiv, dDayDiv);

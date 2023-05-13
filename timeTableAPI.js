@@ -12,6 +12,9 @@ export class ClassTimeList {
   getDuration(previousTime, currentTime) {
     return (currentTime[0] -previousTime[0])*60 +currentTime[1] -previousTime[1];
   }
+  checkAllIn() {
+    return this.classTimes.other.length == this.maxClass;
+  }
   checkOrder() {
     return this.get().map(time => time[2]).every(duration => duration >= 0);
   }
@@ -19,8 +22,7 @@ export class ClassTimeList {
     if(this.classTimes.other.length < this.maxClass)
       this.classTimes.other.push([hours, minutes]);
     else
-      throw new Error('Class time is already max size.');
-
+      throw new Error('ClassTime is already max length.');
     if(!this.checkOrder()) throw new Error('Invalid class time order. Class times should be in chronological order.');
   }
   getElapsedTime(fromHour, fromMinute, toHour, toMinute) {
@@ -52,6 +54,7 @@ export class ClassTimeList {
     return returnIndex;
   }
   getCurrentClass({hours, minutes}) {
+    if(!this.checkAllIn()) throw new Error(`ClassTime's length must be maxClass(${this.maxClass})`)
     const idx = this.getCurrent(hours, minutes);
     return (idx == 0) ? 1 : idx;
   }
@@ -99,7 +102,6 @@ export class SubjectList {
     const fullName = options.fullName || false;
     const subjects = teachers.map(
       (teacher, index) => new MultipleSubject(subjectName, teacher, suffixType[index], fullName));
-      
     const listFunction = order => subjects[order-1];
     listFunction.toString = () => subjectName;
     listFunction.setExam = function(examAttribute) {

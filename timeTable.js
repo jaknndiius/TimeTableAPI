@@ -383,21 +383,23 @@ const toWeekdayPreiod = index => {
 const render = () => {
   const time = getDate();
   const weekIndex = toWeekdayPreiod(time.day);
-  const currentClass = Setting.getClassTime().getCurrentClass(time);
+  const classTime = Setting.getClassTime().getCurrentClass(time); 
+  const currentClass = classTime || -1;
   updateMainScreen(weekIndex, currentClass);
   if(time.day != 0 && time.day != 6) updateSchoolTimeBar(time);
 }
 const getSchoolTime = () => {
-  const classTime = Setting.getClassTime().get();
-  const schoolTime = classTime[classTime.length -1];
+  const classTime = Setting.getClassTime();
+  if(!classTime) throw new Error();
+  const schoolTime = classTime.classTimes.end;
   return {
     hours: schoolTime[0],
     minutes: schoolTime[1],
     seconds: 0
-  }
+  };
 }
 const getTimeUntilSchoolTime = ({hours, minutes, seconds}) => {
-  const schoolTime = getSchoolTime()
+  const schoolTime = getSchoolTime();
   const untilHours = schoolTime.hours - hours;
   const untilMinutes = schoolTime.minutes - minutes;
   const untilSeconds = schoolTime.seconds - seconds;
@@ -413,14 +415,14 @@ const getTimeBarText = (time) => {
 }
 const updateSchoolTimeBar = (time) => {
   const footer = document.getElementById('footer');
-  if (isSchoolTime(time)) footer.innerHTML = getTimeBarText(time);
+  try {
+    if (isSchoolTime(time)) footer.innerHTML = getTimeBarText(time);
+  } catch(error) {}
 }
-const getBaseDocument = () => {
-  return `<header><p id="title" class="lin">&lt Time Table &gt</p></header><main id="main"><p id="text_time" class="lin"></p><table id="today_time_table"></table><table id="time_table"></table><table id="exam_time_table"></table><div id="moak_test_noti"></div></main><footer><p id="footer"></p></footer>`;
-}
+const BaseDocument = `<header><p id="title" class="lin">&lt Time Table &gt</p></header><main id="main"><p id="text_time" class="lin"></p><table id="today_time_table"></table><table id="time_table"></table><table id="exam_time_table"></table><div id="moak_test_noti"></div></main><footer><p id="footer"></p></footer>`;
 // load page
 export const load = () => {
-  document.body.innerHTML = getBaseDocument();
+  document.body.innerHTML = BaseDocument;
   ExamTable.reload();
   MoakTestNoti.reload();
   setInterval(render, 1);

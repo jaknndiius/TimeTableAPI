@@ -1,4 +1,61 @@
 'use strict'
+export class ClassTimeList {
+  constructor(start, end, maxClass) {
+    this.currentClass = 1;
+    this.maxClass = maxClass;
+    this.classTimes = {
+      start,
+      end,
+      other: []
+    };
+  }
+  getDuration(previousTime, currentTime) {
+    return (currentTime[0] -previousTime[0])*60 +currentTime[1] -previousTime[1];
+  }
+  checkOrder() {
+    return this.get().map(time => time[2]).every(duration => duration >= 0);
+  }
+  addClassTime(hours, minutes) {
+    if(this.classTimes.other.length < this.maxClass)
+      this.classTimes.other.push([hours, minutes]);
+    else
+      throw new Error('Class time is already max size.');
+
+    if(!this.checkOrder()) throw new Error('Invalid class time order. Class times should be in chronological order.');
+  }
+  getElapsedTime(fromHour, fromMinute, toHour, toMinute) {
+    return ((toHour-fromHour)*60) +toMinute -fromMinute;
+  }
+  get() {
+    const times = [];
+    const durations = [];
+    times.push([...this.classTimes.start]);
+    for(const time of Object.values(this.classTimes.other)) {
+      const pre = times[times.length-1];
+      durations.push(this.getDuration(pre, time))
+      times.push([...time]);
+    }
+    durations.push(this.getDuration(times[times.length-1], this.classTimes.end))
+    durations.push(0);
+    times.push([...this.classTimes.end]);
+    for(let i=0;i<times.length;i++) {
+      times[i].push(durations[i]);
+    }
+    return times;
+  }
+  getCurrent(hours, minutes) {
+    let returnIndex = -1;
+    this.get().forEach(([startHour, startMinutes, duration], index) => {
+      const pre = this.getElapsedTime(startHour, startMinutes, hours, minutes);
+      if(pre >=0 && pre < duration) returnIndex = index;
+    });
+    return returnIndex;
+  }
+  getCurrentClass({hours, minutes}) {
+    const idx = this.getCurrent(hours, minutes);
+    return (idx == 0) ? 1 : idx;
+  }
+}
 export class ExamAttribute {
   constructor(selective, descriptive) {
     this.selective = selective;
@@ -77,7 +134,7 @@ export class Setting {
     this.mockTests = [];
     this.subjectsByTime = [];
     this.examList = [];
-    this.classTimes = new Array(8);
+    this.classTime = null;
     Setting.instance = this;
   }
   static getInstance() {
@@ -93,8 +150,8 @@ export class Setting {
   static getExamList() {
     return Setting.getInstance().examList;
   }
-  static getClassTimes() {
-    return Setting.getInstance().classTimes;
+  static getClassTime() {
+    return Setting.getInstance().classTime;
   }
   static getCSAT() {
     return Setting.getInstance().CSAT;
@@ -114,15 +171,14 @@ export class Setting {
         .setSubjects(...subjects)
     );
   }
-  static setClassTime(className, hours, minutes) {
-    Setting.getInstance().classTimes[className] = [hours, minutes];
+  static setClassTime(classTime) {
+    Setting.getInstance().classTime = classTime;
   }
   static setCSAT(csatDay) {
     Setting.getInstance().CSAT = new Date(csatDay);
   } 
 }
 export const Day = { MONDAY: 0, THEUSDAY: 1, WEDNESDAY: 2, THURSDAY: 3, FIRDAY: 4 };
-export const ClassName = { CLASS1: 0 , CLASS2: 1 , CLASS3: 2, CLASS4: 3, CLASS5: 4, CLASS6: 5, CLASS7: 6, END: 7 };
 
 export const SelfStudy = Symbol('selfStudy');
 

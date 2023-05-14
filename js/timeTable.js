@@ -25,7 +25,6 @@ const EventHandler = {
 };
 const $createElementWithText = (tag, textContent) => {
     const element = document.createElement(tag);
-    element.parentElement;
     element.textContent = textContent;
     return element;
 };

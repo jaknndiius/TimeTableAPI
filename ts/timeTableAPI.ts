@@ -5,12 +5,10 @@ interface ClassTimes {
 }
 export class ClassTimeList {
 
-  private currentClass: number;
-  private maxClass: number;
-  public classTimes: ClassTimes;
+  private readonly maxClass: number;
+  public readonly classTimes: ClassTimes;
 
   constructor(start: number[], end: number[], maxClass: number) {
-    this.currentClass = 1;
     this.maxClass = maxClass;
     this.classTimes = { start, end, other: [] };
   }
@@ -65,14 +63,13 @@ export class ClassTimeList {
   }
 }
 export class ExamAttribute {
-  public selective: number;
-  public descriptive: number;
-  public ranges: string[];
+  public readonly selective: number;
+  public readonly descriptive: number;
+  public readonly ranges: string[] = [];
 
   constructor(selective: number, descriptive: number) {
     this.selective = selective;
     this.descriptive = descriptive;
-    this.ranges = [];
   }
   public addRange(range: string): ExamAttribute { 
     this.ranges.push(range);
@@ -102,8 +99,8 @@ export const SuffixType = {
 }
 class MultipleSubject extends Subject {
 
-  private suffix: number | string;
-  private fullName: boolean;
+  private readonly suffix: number | string;
+  private readonly fullName: boolean;
 
   constructor(subjectName: string, teacher: string, suffix: number | string, fullName: boolean) {
     super(subjectName, teacher);
@@ -128,7 +125,7 @@ export class SubjectList extends Subject {
   }
 }
 class Exams {
-  public day: Date;
+  public readonly day: Date;
   public subjects: Subject[] = [];
 
   constructor(month: number, date: number) {
@@ -147,7 +144,7 @@ export enum Day {
   FIRDAY
 }
 class SubjectGroup {
-  private subjects: Subject[];
+  private readonly subjects: Subject[];
 
   constructor(...subjects: Subject[]) {
     this.subjects = subjects;
@@ -169,9 +166,9 @@ export class Setting {
     return Setting.instance;
   }
 
-  private mockTests: Date[] = [];
-  private subjectsByTime: Array<Subject[]> = [];
-  private examList: Exams[] = [];
+  private readonly mockTests: Date[] = [];
+  private readonly subjectsByTime: Array<Subject[]> = [];
+  private readonly examList: Exams[] = [];
   private classTime: ClassTimeList | null = null;
   private CSAT: Date | null = null;
 

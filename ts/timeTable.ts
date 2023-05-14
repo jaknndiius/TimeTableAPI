@@ -21,7 +21,6 @@ const EventHandler = {
 }
 const $createElementWithText = (tag: string, textContent: string): HTMLElement => {
   const element = document.createElement(tag);
-  element.parentElement
   element.textContent = textContent;
   return element;
 }
@@ -83,8 +82,8 @@ const $popup = (modal: HTMLElement) => {
   document.querySelector('#main')?.appendChild(modal);
 }
 class Table {
-  public id: string;
-  public caption: string;
+  public readonly id: string;
+  public readonly caption: string;
   constructor(id: string, caption: string) {
     this.id = id;
     this.caption = caption;
@@ -210,8 +209,8 @@ class ExamTable extends Table {
     return ExamTable.instance;
   }
 
-  private koreanDay = ['첫째날', '둘째날', '셋째날', '넷째날'];
-  private nonExamInfoList = ['시험 정보가 업데이트 되지 않았습니다.', '시험 정보를 제공해 주세요 :)', '시험 정보가 제공되면 객관식 밑 서술형 문항 갯수와 시험 범위를 확인하실 수 있습니다.'];
+  private readonly koreanDay = ['첫째날', '둘째날', '셋째날', '넷째날'];
+  private readonly nonExamInfoList = ['시험 정보가 업데이트 되지 않았습니다.', '시험 정보를 제공해 주세요 :)', '시험 정보가 제공되면 객관식 밑 서술형 문항 갯수와 시험 범위를 확인하실 수 있습니다.'];
 
   private makeModalWindow(subject: Subject): HTMLElement {
     const attribute = subject.examAttribute;

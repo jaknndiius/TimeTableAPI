@@ -1,6 +1,5 @@
 export class ClassTimeList {
     constructor(start, end, maxClass) {
-        this.currentClass = 1;
         this.maxClass = maxClass;
         this.classTimes = { start, end, other: [] };
     }
@@ -59,9 +58,9 @@ export class ClassTimeList {
 }
 export class ExamAttribute {
     constructor(selective, descriptive) {
+        this.ranges = [];
         this.selective = selective;
         this.descriptive = descriptive;
-        this.ranges = [];
     }
     addRange(range) {
         this.ranges.push(range);

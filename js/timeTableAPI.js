@@ -138,14 +138,11 @@ export class Setting {
         this.examList = [];
         this.classTime = null;
         this.CSAT = null;
-        if (Setting.instance)
-            throw new Error('alreay instantiated class.');
-        Setting.instance = this;
     }
     static getInstance() {
-        if (!this.instance)
-            this.instance = new Setting();
-        return this.instance;
+        if (!Setting.instance)
+            Setting.instance = new Setting();
+        return Setting.instance;
     }
     static getMoakTests() {
         return Setting.getInstance().mockTests;

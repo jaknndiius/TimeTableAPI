@@ -160,7 +160,14 @@ class SubjectGroup {
   }
 }
 export class Setting {
-  static instance: Setting;
+  private static instance: Setting;
+
+  private constructor() { }
+
+  private static getInstance(): Setting {
+    if(!Setting.instance) Setting.instance = new Setting();
+    return Setting.instance;
+  }
 
   private mockTests: Date[] = [];
   private subjectsByTime: Array<Subject[]> = [];
@@ -168,14 +175,6 @@ export class Setting {
   private classTime: ClassTimeList | null = null;
   private CSAT: Date | null = null;
 
-  constructor() {
-    if(Setting.instance) throw new Error('alreay instantiated class.');
-    Setting.instance = this;
-  }
-  static getInstance(): Setting {
-    if(!this.instance) this.instance = new Setting();
-    return this.instance;
-  }
   static getMoakTests(): Date[] {
     return Setting.getInstance().mockTests;
   }

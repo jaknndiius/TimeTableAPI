@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "target": "ES6", // 컴파일된 JavaScript 코드의 목표 버전
+    "module": "ES6", // 모듈 시스템
+    "lib": ["ES2017", "DOM"],
+    "outDir": "../javascript", // 컴파일된 JavaScript 파일의 출력 디렉토리
+    "strict": true, // 엄격한 타입 체크 활성화
+    "esModuleInterop": true, // CommonJS 모듈을 ES 모듈처럼 사용하기 위한 설정
+  },
+  "include": [
+    "*.ts"
+  ]
+}

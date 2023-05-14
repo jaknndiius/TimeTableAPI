@@ -129,14 +129,14 @@ class SimpleTable extends Table {
   }
   private makeHoliday(): HTMLElement {
     const div = document.createElement('div');
-    div.classList.add('lin-highlight1')
+    div.classList.add('lin-highlight1');
     div.appendChild($createElementWithText('p', '오늘은 신나는 휴일!'));
     return div;
   }
   public static reload(weekIndex: number, currentClass: number) {
     const instance = SimpleTable.getInstance();
     const table = document.querySelector('#' + instance.id);
-    if(weekIndex == -1) table?.replaceChildren(instance.makeHoliday())
+    if(weekIndex == -1) table?.replaceChildren(instance.makeHoliday());
     else table?.replaceChildren(
           $createElementWithText('caption', instance.caption),
           instance.makeHead(weekIndex, currentClass),

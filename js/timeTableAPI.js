@@ -96,9 +96,11 @@ class MultipleSubject extends Subject {
     }
 }
 export class SubjectList extends Subject {
-    constructor(subjectName, teachers, options = { suffixType: SuffixType.NUMBER, fullName: false }) {
+    constructor(subjectName, teachers, options) {
         super(subjectName, '');
-        teachers.map((teacher, index) => new MultipleSubject(subjectName, teacher, options.suffixType[index], options.fullName)).forEach((sub, idx) => this[idx + 1] = sub);
+        const suffixType = (options === null || options === void 0 ? void 0 : options.suffixType) || SuffixType.NUMBER;
+        const fullName = (options === null || options === void 0 ? void 0 : options.fullName) || false;
+        teachers.map((teacher, index) => new MultipleSubject(subjectName, teacher, suffixType[index], fullName)).forEach((sub, idx) => this[idx + 1] = sub);
     }
 }
 class Exams {

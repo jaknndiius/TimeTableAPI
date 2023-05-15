@@ -111,16 +111,18 @@ class MultipleSubject extends Subject {
     return ((this.fullName) ? this.subjectName : this.subjectName[0]) + this.suffix;
   }
 }
-interface Options {
-  suffixType: typeof SuffixType[keyof typeof SuffixType],
-  fullName: boolean
+interface DisplayOptions {
+  suffixType?: typeof SuffixType[keyof typeof SuffixType],
+  fullName?: boolean
 }
 export class SubjectList extends Subject {
-  [index: number]: MultipleSubject;
-  constructor(subjectName: string, teachers: string[], options: Options = {suffixType: SuffixType.NUMBER, fullName: false}) {
+  [order: number]: MultipleSubject;
+  constructor(subjectName: string, teachers: string[], options: DisplayOptions | undefined ) {
     super(subjectName, '');
+    const suffixType = options?.suffixType || SuffixType.NUMBER;
+    const fullName = options?.fullName || false;
     teachers.map(
-      (teacher, index) => new MultipleSubject(subjectName, teacher, options.suffixType[index], options.fullName)
+      (teacher, index) => new MultipleSubject(subjectName, teacher, suffixType[index], fullName)
     ).forEach((sub, idx) => this[idx+1] = sub);
   }
 }

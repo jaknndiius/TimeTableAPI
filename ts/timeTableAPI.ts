@@ -218,5 +218,5 @@ export class Setting {
 }
 export const SelfStudy = Symbol('selfStudy');
 
-import { load } from './timeTable.js'
+import { load } from './timeTable.js';
 export const loadPage = load;

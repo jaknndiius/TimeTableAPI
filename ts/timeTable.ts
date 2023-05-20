@@ -1,4 +1,4 @@
-import { Setting, SelfStudy, Subject } from './timeTableAPI.js';
+import { SelfStudy, Setting, Subject } from './timeTableAPI.js';
 const $removeEmpty = function (list: any[]): any[] {
   const relist: any[] = [];
   list.forEach(ele => relist.push(ele));

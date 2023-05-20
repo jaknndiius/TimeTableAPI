@@ -80,7 +80,13 @@ export class Subject {
         this.examAttribute = examAttribute;
     }
 }
-export const SuffixType = {
+export var SuffixType;
+(function (SuffixType) {
+    SuffixType["NUMBER"] = "NUMBER";
+    SuffixType["ALPABET"] = "ALPABET";
+    SuffixType["ROMAN"] = "ROMAN";
+})(SuffixType || (SuffixType = {}));
+const SuffixTypes = {
     NUMBER: [1, 2, 3, 4, 5],
     ALPABET: ['A', 'B', 'C', 'D', 'E'],
     ROMAN: ['Ⅰ', 'Ⅱ', 'Ⅲ', 'Ⅳ', 'Ⅴ']
@@ -100,7 +106,7 @@ export class SubjectList extends Subject {
         super(subjectName, '');
         const suffixType = (options === null || options === void 0 ? void 0 : options.suffixType) || SuffixType.NUMBER;
         const fullName = (options === null || options === void 0 ? void 0 : options.fullName) || false;
-        teachers.map((teacher, index) => new MultipleSubject(subjectName, teacher, suffixType[index], fullName)).forEach((sub, idx) => this[idx + 1] = sub);
+        teachers.map((teacher, index) => new MultipleSubject(subjectName, teacher, SuffixTypes[suffixType][index], fullName)).forEach((sub, idx) => this[idx + 1] = sub);
     }
 }
 class Exams {

@@ -13,7 +13,7 @@ export class ClassTimeList {
     this.classTimes = { start, end, other: [] };
   }
   private getDuration(previousTime: number[], currentTime: number[]): number {
-    return (currentTime[0] -previousTime[0])*60 +currentTime[1] -previousTime[1];
+    return (currentTime[0] - previousTime[0]) * 60 + currentTime[1] - previousTime[1];
   }
   private checkAllIn(): boolean {
     return this.classTimes.other.length == this.maxClass;
@@ -22,28 +22,28 @@ export class ClassTimeList {
     return this.get().map(time => time[2]).every(duration => duration >= 0);
   }
   public addClassTime(hours: number, minutes: number) {
-    if(this.classTimes.other.length < this.maxClass)
+    if (this.classTimes.other.length < this.maxClass)
       this.classTimes.other.push([hours, minutes]);
     else
       throw new Error('ClassTime is already max length.');
-    if(!this.checkOrder()) throw new Error('Invalid class time order. Class times should be in chronological order.');
+    if (!this.checkOrder()) throw new Error('Invalid class time order. Class times should be in chronological order.');
   }
   private getElapsedTime(fromHour: number, fromMinute: number, toHour: number, toMinute: number): number {
-    return ((toHour-fromHour)*60) +toMinute -fromMinute;
+    return ((toHour - fromHour) * 60) + toMinute - fromMinute;
   }
   private get(): Array<number[]> {
     const times: Array<number[]> = [];
     const durations: number[] = [];
     times.push([...this.classTimes.start]);
-    for(const time of Object.values(this.classTimes.other)) {
-      const prev: number[] = times[times.length-1];
+    for (const time of Object.values(this.classTimes.other)) {
+      const prev: number[] = times[times.length - 1];
       durations.push(this.getDuration(prev, time));
       times.push([...time]);
     }
-    durations.push(this.getDuration(times[times.length-1], this.classTimes.end))
+    durations.push(this.getDuration(times[times.length - 1], this.classTimes.end))
     durations.push(0);
     times.push([...this.classTimes.end]);
-    for(let i=0;i<times.length;i++) {
+    for (let i = 0; i < times.length; i++) {
       times[i].push(durations[i]);
     }
     return times;
@@ -52,12 +52,12 @@ export class ClassTimeList {
     let returnIndex = -1;
     this.get().forEach(([startHour, startMinutes, duration], index) => {
       const pre = this.getElapsedTime(startHour, startMinutes, hours, minutes);
-      if(pre >=0 && pre < duration) returnIndex = index;
+      if (pre >= 0 && pre < duration) returnIndex = index;
     });
     return returnIndex;
   }
-  public getCurrentClass({hours, minutes}: {hours: number, minutes: number}): number {
-    if(!this.checkAllIn()) throw new Error(`ClassTime's length must be maxClass(${this.maxClass})`)
+  public getCurrentClass({ hours, minutes }: { hours: number, minutes: number }): number {
+    if (!this.checkAllIn()) throw new Error(`ClassTime's length must be maxClass(${this.maxClass})`)
     const idx = this.getCurrent(hours, minutes);
     return (idx == 0) ? 1 : idx;
   }
@@ -71,7 +71,7 @@ export class ExamAttribute {
     this.selective = selective;
     this.descriptive = descriptive;
   }
-  public addRange(range: string): ExamAttribute { 
+  public addRange(range: string): ExamAttribute {
     this.ranges.push(range);
     return this;
   }
@@ -92,7 +92,12 @@ export class Subject {
     this.examAttribute = examAttribute;
   }
 }
-export const SuffixType = {
+export enum SuffixType {
+  NUMBER = 'NUMBER',
+  ALPABET = 'ALPABET',
+  ROMAN = 'ROMAN'
+}
+const SuffixTypes = {
   NUMBER: [1, 2, 3, 4, 5],
   ALPABET: ['A', 'B', 'C', 'D', 'E'],
   ROMAN: ['Ⅰ', 'Ⅱ', 'Ⅲ', 'Ⅳ', 'Ⅴ']
@@ -112,18 +117,18 @@ class MultipleSubject extends Subject {
   }
 }
 interface DisplayOptions {
-  suffixType?: typeof SuffixType[keyof typeof SuffixType],
+  suffixType?: SuffixType,
   fullName?: boolean
 }
 export class SubjectList extends Subject {
   [order: number]: MultipleSubject;
-  constructor(subjectName: string, teachers: string[], options: DisplayOptions | undefined ) {
+  constructor(subjectName: string, teachers: string[], options: DisplayOptions | undefined) {
     super(subjectName, '');
     const suffixType = options?.suffixType || SuffixType.NUMBER;
     const fullName = options?.fullName || false;
     teachers.map(
-      (teacher, index) => new MultipleSubject(subjectName, teacher, suffixType[index], fullName)
-    ).forEach((sub, idx) => this[idx+1] = sub);
+      (teacher, index) => new MultipleSubject(subjectName, teacher, SuffixTypes[suffixType][index], fullName)
+    ).forEach((sub, idx) => this[idx + 1] = sub);
   }
 }
 class Exams {
@@ -164,7 +169,7 @@ export class Setting {
   private constructor() { }
 
   private static getInstance(): Setting {
-    if(!Setting.instance) Setting.instance = new Setting();
+    if (!Setting.instance) Setting.instance = new Setting();
     return Setting.instance;
   }
 
@@ -195,7 +200,7 @@ export class Setting {
   static group(...subjects: Subject[]) {
     return new SubjectGroup(...subjects);
   }
-  static addSubjectsToSchedule(day:Day, subjects: Subject[]) {
+  static addSubjectsToSchedule(day: Day, subjects: Subject[]) {
     Setting.getInstance().subjectsByTime[day] = subjects;
   }
   static addExams(month: number, date: number, subjects: Subject[]) {
@@ -209,7 +214,7 @@ export class Setting {
   }
   static setCSAT(csatDay: string) {
     Setting.getInstance().CSAT = new Date(csatDay);
-  } 
+  }
 }
 export const SelfStudy = Symbol('selfStudy');
 

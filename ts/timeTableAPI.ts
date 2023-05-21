@@ -291,10 +291,10 @@ export class Setting {
    * **수능 날짜를 설정합니다**
    *
    * @static
-   * @param {string} csatDay *날짜 문자열('YYYY/MM/DD')*
+   * @param {string} dateFormat *날짜 문자열('YYYY/MM/DD')*
    */
-  static setCSAT(csatDay: string) {
-    Setting.getInstance().CSAT = new Date(csatDay);
+  static setCSAT(dateFormat: string) {
+    Setting.getInstance().CSAT = new Date(dateFormat);
   }
   /**
    * **과목을 그룹화합니다**

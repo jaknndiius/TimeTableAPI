@@ -196,7 +196,6 @@ class SimpleTable extends Table {
   public static reload(weekIndex: number, currentClass: number) {
     const instance = SimpleTable.getInstance();
     const table = document.querySelector('#' + instance.id);
-    weekIndex = -1
     if (weekIndex == -1) table?.replaceChildren(instance.makeHoliday());
     else table?.replaceWith(
       instance.make(

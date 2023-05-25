@@ -41,11 +41,9 @@ const $makeClickableTeacher = (teacherName) => {
     p.onclick = event => EventHandler.onTeacherTdClicked(event.target);
     return p;
 };
-const $makeClickableTd = (subjectName, teacherName) => {
-    const td = document.createElement('td');
+const $setToClickableTd = (td, subjectName, teacherName) => {
     td.appendChild($makeClickableSubject(subjectName));
     td.appendChild($makeClickableTeacher(teacherName));
-    return td;
 };
 const $makeModalWindow = (title, paragraphs, footer = null) => {
     const popupDiv = document.createElement('div');
@@ -79,10 +77,51 @@ const $popup = (modal) => {
     var _a;
     (_a = document.querySelector('#main')) === null || _a === void 0 ? void 0 : _a.appendChild(modal);
 };
+const $makeTable = () => {
+};
+Object.prototype.let = function (func) {
+    func(this);
+    return this;
+};
 class Table {
     constructor(id, caption) {
         this.id = id;
         this.caption = caption;
+    }
+    createRow() {
+        return document.createElement('td');
+    }
+    makeSingleTHead(tHead, titles) {
+        const row = tHead.insertRow();
+        titles.forEach(generator => generator(row.insertCell()));
+    }
+    makeSeveralTHead(tHead, titleses) {
+        titleses.forEach(generators => {
+            tHead.insertRow().let((row) => {
+                generators.forEach(generator => generator(row.insertCell()));
+            });
+        });
+    }
+    make(titles, bodies) {
+        const table = document.createElement('table').let((table) => {
+            table.id = this.id;
+            table.createCaption().textContent = this.caption;
+            const tHead = table.createTHead();
+            if (titles[0] instanceof Array)
+                this.makeSeveralTHead(tHead, titles);
+            else
+                this.makeSingleTHead(tHead, titles);
+            table.createTBody().let((tBody) => {
+                bodies.forEach(bodyGenerators => {
+                    tBody.insertRow().let((row) => {
+                        bodyGenerators.forEach(bodyGenerator => {
+                            bodyGenerator(row.insertCell());
+                        });
+                    });
+                });
+            });
+        });
+        return table;
     }
 }
 class SimpleTable extends Table {
@@ -98,42 +137,40 @@ class SimpleTable extends Table {
             : 0;
     }
     makeHead(weekIndex, currentClass) {
-        const thead = document.createElement('thead');
-        const tr = document.createElement('tr');
+        const gens = [];
         for (let i = 1; i <= this.getClassLength(weekIndex); i++) {
-            const th = $createElementWithText('th', i + '교시');
-            i == currentClass && th.classList.add('lin-highlight1');
-            tr.appendChild(th);
+            gens.push(cell => {
+                cell.textContent = i + '교시';
+                i == currentClass && cell.classList.add('lin-highlight1');
+            });
         }
-        thead.appendChild(tr);
-        return thead;
+        return gens;
     }
     makeBody(weekIndex, currentClass) {
-        const tbody = document.createElement('tbody');
-        const tr = document.createElement('tr');
         const subjectByTime = Setting.getSubjectsByTime();
+        const genses = [];
         subjectByTime.length != 0 && subjectByTime[weekIndex] && subjectByTime[weekIndex].forEach((sub, idx) => {
-            const td = $makeClickableTd(sub + '', sub.teacher);
-            if (idx == currentClass - 1)
-                td.classList.add('lin-highlight1');
-            tr.appendChild(td);
+            genses.push(cell => {
+                $setToClickableTd(cell, sub + '', sub.teacher);
+                idx == currentClass - 1 && cell.classList.add('lin-highlight1');
+            });
         });
-        tbody.appendChild(tr);
-        return tbody;
+        return [genses];
     }
     makeHoliday() {
-        const div = document.createElement('div');
-        div.classList.add('lin-highlight1');
-        div.appendChild($createElementWithText('p', '오늘은 신나는 휴일!'));
-        return div;
+        return document.createElement('div').let((div) => {
+            div.classList.add('lin-highlight1');
+            div.appendChild($createElementWithText('p', '오늘은 신나는 휴일!'));
+        });
     }
     static reload(weekIndex, currentClass) {
         const instance = SimpleTable.getInstance();
         const table = document.querySelector('#' + instance.id);
+        weekIndex = -1;
         if (weekIndex == -1)
             table === null || table === void 0 ? void 0 : table.replaceChildren(instance.makeHoliday());
         else
-            table === null || table === void 0 ? void 0 : table.replaceChildren($createElementWithText('caption', instance.caption), instance.makeHead(weekIndex, currentClass), instance.makeBody(weekIndex, currentClass));
+            table === null || table === void 0 ? void 0 : table.replaceWith(instance.make(instance.makeHead(weekIndex, currentClass), instance.makeBody(weekIndex, currentClass)));
     }
 }
 class MainTable extends Table {
@@ -147,40 +184,43 @@ class MainTable extends Table {
         return Math.max(...$removeEmpty(Setting.getSubjectsByTime()).map(s => s.length));
     }
     makeRow(weekIndex, subjects, highlight) {
-        const tr = document.createElement('tr');
-        if (highlight)
-            tr.classList.add('lin-highlight2');
-        tr.appendChild($createElementWithText('th', weekName[weekIndex] + '요일'));
+        const gens = [];
+        gens.push(cell => {
+            cell.textContent = weekName[weekIndex] + '요일';
+            highlight && cell.classList.add('lin-highlight2');
+        });
         if (subjects) {
             for (let i = 0; i < this.getMaxClassLength(); i++) {
                 const subject = subjects[i];
-                tr.appendChild(subject
-                    ? $makeClickableTd(subject + '', subject.teacher)
-                    : tr.appendChild($createElementWithText('td', '-')));
+                gens.push(cell => {
+                    subject
+                        ? $setToClickableTd(cell, subject + '', subject.teacher)
+                        : cell.textContent = '-';
+                    highlight && cell.classList.add('lin-highlight2');
+                });
             }
         }
-        return tr;
+        return gens;
     }
     makeHead() {
-        const thead = document.createElement('thead');
-        const tr = document.createElement('tr');
-        tr.appendChild(document.createElement('th'));
+        const gens = [() => { }];
         for (let i = 1; i <= this.getMaxClassLength(); i++)
-            tr.appendChild($createElementWithText('th', i + '교시'));
-        thead.appendChild(tr);
-        return thead;
+            gens.push(cell => {
+                cell.textContent = i + '교시';
+            });
+        return gens;
     }
     makeBody(weekIndex) {
-        const tbody = document.createElement('tbody');
+        const genses = [];
         for (let i = 0; i < 5; i++) {
-            tbody.appendChild(this.makeRow(i, Setting.getSubjectsByTime()[i], weekIndex == i));
+            genses.push(this.makeRow(i, Setting.getSubjectsByTime()[i], weekIndex == i));
         }
-        return tbody;
+        return genses;
     }
     static reload(weekIndex) {
         const instance = MainTable.getInstance();
         const table = document.querySelector('#' + instance.id);
-        table === null || table === void 0 ? void 0 : table.replaceChildren($createElementWithText('caption', instance.caption), instance.makeHead(), instance.makeBody(weekIndex));
+        table === null || table === void 0 ? void 0 : table.replaceWith(instance.make(instance.makeHead(), instance.makeBody(weekIndex)));
     }
 }
 class ExamTable extends Table {
@@ -211,52 +251,53 @@ class ExamTable extends Table {
         return `${day.getMonth() + 1}/${day.getDate()} ${weekName[day.getDay() - 1] || ''}`;
     }
     makeHead() {
-        const thead = document.createElement('thead');
-        const koreanDayTr = document.createElement('tr');
-        koreanDayTr.appendChild(document.createElement('th'));
-        const numberDayTr = document.createElement('tr');
-        numberDayTr.appendChild(document.createElement('th'));
+        const koreanDayCell = [() => { }];
+        const numberDayCell = [() => { }];
         Setting.getExamList().forEach(({ day }, index) => {
-            koreanDayTr.appendChild($createElementWithText('th', this.koreanDay[index]));
-            numberDayTr.appendChild($createElementWithText('th', `${this.formatDate(day)}`));
+            koreanDayCell.push(cell => {
+                cell.textContent = this.koreanDay[index];
+            });
+            numberDayCell.push(cell => {
+                cell.textContent = `${this.formatDate(day)}`;
+            });
         });
-        thead.appendChild(koreanDayTr);
-        thead.appendChild(numberDayTr);
-        return thead;
+        return [koreanDayCell, numberDayCell];
     }
     makeBody() {
         if (Setting.getExamList().length == 0)
             return null;
-        const tbody = document.createElement('tbody');
+        const genses = [];
         const maxSize = Math.max(...Setting.getExamList().map(exams => exams.subjects.length));
         const examsByTime = new Array(maxSize).fill(null).map(_ => []);
         Setting.getExamList().forEach(exams => examsByTime.forEach((arr, idx) => arr.push(exams.subjects[idx])));
         examsByTime.forEach((exams, index) => {
             const tr = document.createElement('tr');
             tr.appendChild($createElementWithText('th', (index + 1) + '교시'));
+            const gens = [];
+            gens.push(cell => cell.textContent = (index + 1) + '교시');
             for (const subject of exams) {
-                let td;
                 if (subject == undefined)
-                    td = $createElementWithText('td', '-');
+                    gens.push(cell => cell.textContent = '-');
                 else if (subject == SelfStudy) {
-                    td = $createElementWithText('td', '자습');
+                    gens.push(cell => cell.textContent = '자습');
                 }
                 else {
-                    td = $createElementWithText('td', subject);
-                    td.onclick = () => this.onExamTdClicked(subject);
+                    gens.push(cell => {
+                        cell.textContent = subject;
+                        cell.onclick = () => this.onExamTdClicked(subject);
+                    });
                 }
-                tr.appendChild(td);
             }
-            tbody.appendChild(tr);
+            genses.push(gens);
         });
-        return tbody;
+        return genses;
     }
     static reload() {
         const instance = ExamTable.getInstance();
-        const table = document.querySelector('#' + instance.id);
+        let table = document.querySelector('#' + instance.id);
         const body = instance.makeBody();
-        if (body != null)
-            table === null || table === void 0 ? void 0 : table.replaceChildren($createElementWithText('caption', instance.caption), instance.makeHead(), body);
+        body != null
+            && (table === null || table === void 0 ? void 0 : table.replaceWith(instance.make(instance.makeHead(), body)));
     }
 }
 class MoakTestNoti {
@@ -416,4 +457,7 @@ export const load = () => {
     ExamTable.reload();
     MoakTestNoti.reload();
     setInterval(render, 1);
+    // const tt = new Table('fff', '오늘').make(['1', '2'], [[(a) => { a.textContent = '11' }]]);
+    // console.log(tt)
+    // document.body.appendChild(tt);
 };

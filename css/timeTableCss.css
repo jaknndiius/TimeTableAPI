@@ -28,21 +28,22 @@ body {
 }
 header #title {
   font-size: var(--font-size-bolder);
-  padding: var(--font-size-bolder);
+  padding: var(--font-size-bold);
 }
 .lin {
   background: linear-gradient(to right, rgb(255, 0, 0), rgb(255, 213, 46));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
-th.lin-highlight1,
-.lin-highlight1 p {
+div.lin-highlight1 p,
+thead td.lin-highlight1,
+tbody td.lin-highlight1 p {
   background: linear-gradient(to right, rgb(76, 213, 13), rgb(0, 235, 184));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
-.lin-highlight2 th,
-.lin-highlight2 td p {
+tbody td.lin-highlight2:first-child,
+tbody td.lin-highlight2 p {
   background: linear-gradient(to right, rgb(26, 87, 255), rgb(172, 39, 255));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -70,10 +71,6 @@ th.lin-highlight1,
   width: 40px;
   height: 20px;
 }
-#main #time_table tbody tr th{
-  width: 40px;
-  height: 20px;
-}
 .subject_name,
 .teacher_name {
   width: 40px;
@@ -88,7 +85,7 @@ th.lin-highlight1,
 #main #exam_time_table thead tr:first-child {
   color: rgb(110, 110, 110);
 }
-#main #exam_time_table tbody tr td {
+#main #exam_time_table tbody tr td:not(:first-child) {
   cursor: pointer;
 }
 @keyframes fade-in {

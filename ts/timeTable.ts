@@ -37,11 +37,9 @@ const $makeClickableTeacher = (teacherName: string): HTMLElement => {
   p.onclick = event => EventHandler.onTeacherTdClicked(event.target);
   return p;
 }
-const $makeClickableTd = (subjectName: string, teacherName: string): HTMLElement => {
-  const td = document.createElement('td');
+const $setToClickableTd = (td: HTMLTableCellElement, subjectName: string, teacherName: string) => {
   td.appendChild($makeClickableSubject(subjectName));
   td.appendChild($makeClickableTeacher(teacherName));
-  return td;
 }
 const $makeModalWindow = (title: string, paragraphs: string[], footer: string[] | null = null): HTMLElement => {
   const popupDiv = document.createElement('div');
@@ -81,12 +79,71 @@ const $makeModalWindow = (title: string, paragraphs: string[], footer: string[] 
 const $popup = (modal: HTMLElement) => {
   document.querySelector('#main')?.appendChild(modal);
 }
+const $makeTable = () => {
+
+}
+declare global {
+  interface Object {
+    let(func: (thisArg: any) => void): any;
+  }
+}
+Object.prototype.let = function (func: (thisArg: any) => void) {
+  func(this); return this;
+}
+type cellGenerator = (cell: HTMLTableCellElement) => void;
 class Table {
   public readonly id: string;
   public readonly caption: string;
   constructor(id: string, caption: string) {
     this.id = id;
     this.caption = caption;
+  }
+
+  private createRow(): HTMLTableCellElement {
+    return document.createElement('td') as HTMLTableCellElement;
+  }
+  private makeSingleTHead(tHead: HTMLTableSectionElement, titles: cellGenerator[]) {
+    const row = tHead.insertRow();
+    titles.forEach(
+      generator => generator(row.insertCell())
+    );
+  }
+  private makeSeveralTHead(tHead: HTMLTableSectionElement, titleses: cellGenerator[][]) {
+    titleses.forEach(
+      generators => {
+        tHead.insertRow().let(
+          (row: HTMLTableRowElement) => {
+            generators.forEach(
+              generator => generator(row.insertCell())
+            );
+          }
+        )
+      }
+    );
+  }
+
+  public make(titles: cellGenerator[] | cellGenerator[][], bodies: cellGenerator[][]): HTMLTableElement {
+    const table = document.createElement('table').let((table: HTMLTableElement) => {
+      table.id = this.id;
+      table.createCaption().textContent = this.caption;
+
+      const tHead = table.createTHead();
+      if (titles[0] instanceof Array)
+        this.makeSeveralTHead(tHead, titles as cellGenerator[][]);
+      else
+        this.makeSingleTHead(tHead, titles as cellGenerator[]);
+
+      table.createTBody().let((tBody: HTMLTableSectionElement) => {
+        bodies.forEach(bodyGenerators => {
+          tBody.insertRow().let((row: HTMLTableRowElement) => {
+            bodyGenerators.forEach(bodyGenerator => {
+              bodyGenerator(row.insertCell());
+            });
+          });
+        });
+      });
+    });
+    return table;
   }
 }
 class SimpleTable extends Table {
@@ -104,43 +161,47 @@ class SimpleTable extends Table {
       ? Setting.getSubjectsByTime()[weekIndex].length
       : 0;
   }
-  private makeHead(weekIndex: number, currentClass: number): HTMLElement {
-    const thead = document.createElement('thead');
-    const tr = document.createElement('tr');
+  private makeHead(weekIndex: number, currentClass: number): cellGenerator[] {
+    const gens: cellGenerator[] = [];
     for (let i = 1; i <= this.getClassLength(weekIndex); i++) {
-      const th = $createElementWithText('th', i + '교시');
-      i == currentClass && th.classList.add('lin-highlight1');
-      tr.appendChild(th);
+      gens.push(
+        cell => {
+          cell.textContent = i + '교시';
+          i == currentClass && cell.classList.add('lin-highlight1');
+        }
+      )
     }
-    thead.appendChild(tr);
-    return thead;
+    return gens;
   }
-  private makeBody(weekIndex: number, currentClass: number): HTMLElement {
-    const tbody = document.createElement('tbody');
-    const tr = document.createElement('tr');
+  private makeBody(weekIndex: number, currentClass: number): cellGenerator[][] {
     const subjectByTime = Setting.getSubjectsByTime();
+
+    const genses: cellGenerator[] = [];
     subjectByTime.length != 0 && subjectByTime[weekIndex] && subjectByTime[weekIndex].forEach((sub, idx) => {
-      const td = $makeClickableTd(sub + '', sub.teacher);
-      if (idx == currentClass - 1) td.classList.add('lin-highlight1');
-      tr.appendChild(td);
+      genses.push(
+        cell => {
+          $setToClickableTd(cell, sub + '', sub.teacher);
+          idx == currentClass - 1 && cell.classList.add('lin-highlight1');
+        }
+      );
     });
-    tbody.appendChild(tr);
-    return tbody;
+    return [genses];
   }
   private makeHoliday(): HTMLElement {
-    const div = document.createElement('div');
-    div.classList.add('lin-highlight1');
-    div.appendChild($createElementWithText('p', '오늘은 신나는 휴일!'));
-    return div;
+    return document.createElement('div').let((div: HTMLDivElement) => {
+      div.classList.add('lin-highlight1');
+      div.appendChild($createElementWithText('p', '오늘은 신나는 휴일!'));
+    });
   }
   public static reload(weekIndex: number, currentClass: number) {
     const instance = SimpleTable.getInstance();
     const table = document.querySelector('#' + instance.id);
+    weekIndex = -1
     if (weekIndex == -1) table?.replaceChildren(instance.makeHoliday());
-    else table?.replaceChildren(
-      $createElementWithText('caption', instance.caption),
-      instance.makeHead(weekIndex, currentClass),
-      instance.makeBody(weekIndex, currentClass));
+    else table?.replaceWith(
+      instance.make(
+        instance.makeHead(weekIndex, currentClass),
+        instance.makeBody(weekIndex, currentClass)));
   }
 }
 class MainTable extends Table {
@@ -156,47 +217,53 @@ class MainTable extends Table {
   private getMaxClassLength(): number {
     return Math.max(...$removeEmpty(Setting.getSubjectsByTime()).map(s => s.length));
   }
-  private makeRow(weekIndex: number, subjects: Subject[], highlight: boolean): HTMLElement {
-    const tr = document.createElement('tr');
-    if (highlight) tr.classList.add('lin-highlight2');
-    tr.appendChild(
-      $createElementWithText('th', weekName[weekIndex] + '요일'));
+  private makeRow(weekIndex: number, subjects: Subject[], highlight: boolean): cellGenerator[] {
+    const gens: cellGenerator[] = [];
+    gens.push(
+      cell => {
+        cell.textContent = weekName[weekIndex] + '요일';
+        highlight && cell.classList.add('lin-highlight2');
+      });
     if (subjects) {
       for (let i = 0; i < this.getMaxClassLength(); i++) {
         const subject = subjects[i];
-        tr.appendChild(
-          subject
-            ? $makeClickableTd(subject + '', subject.teacher)
-            : tr.appendChild($createElementWithText('td', '-')));
+        gens.push(
+          cell => {
+            subject
+              ? $setToClickableTd(cell, subject + '', subject.teacher)
+              : cell.textContent = '-';
+            highlight && cell.classList.add('lin-highlight2');
+          }
+        )
       }
     }
-    return tr;
+    return gens;
   }
-  private makeHead(): HTMLElement {
-    const thead = document.createElement('thead');
-    const tr = document.createElement('tr');
-    tr.appendChild(document.createElement('th'));
+  private makeHead(): cellGenerator[] {
+    const gens: cellGenerator[] = [() => { }];
     for (let i = 1; i <= this.getMaxClassLength(); i++)
-      tr.appendChild(
-        $createElementWithText('th', i + '교시'));
-    thead.appendChild(tr);
-    return thead;
+      gens.push(
+        cell => {
+          cell.textContent = i + '교시';
+        });
+    return gens;
   }
-  private makeBody(weekIndex: number): HTMLElement {
-    const tbody = document.createElement('tbody');
+  private makeBody(weekIndex: number): cellGenerator[][] {
+    const genses: cellGenerator[][] = [];
     for (let i = 0; i < 5; i++) {
-      tbody.appendChild(
-        this.makeRow(i, Setting.getSubjectsByTime()[i], weekIndex == i));
+      genses.push(
+        this.makeRow(i, Setting.getSubjectsByTime()[i], weekIndex == i)
+      );
     }
-    return tbody;
+    return genses;
   }
   public static reload(weekIndex: number) {
     const instance = MainTable.getInstance();
     const table = document.querySelector('#' + instance.id);
-    table?.replaceChildren(
-      $createElementWithText('caption', instance.caption),
-      instance.makeHead(),
-      instance.makeBody(weekIndex));
+    table?.replaceWith(
+      instance.make(
+        instance.makeHead(),
+        instance.makeBody(weekIndex)));
   }
 }
 class ExamTable extends Table {
@@ -230,59 +297,58 @@ class ExamTable extends Table {
   private formatDate(day: Date): string {
     return `${day.getMonth() + 1}/${day.getDate()} ${weekName[day.getDay() - 1] || ''}`;
   }
-  private makeHead(): HTMLElement {
-    const thead = document.createElement('thead');
-
-    const koreanDayTr = document.createElement('tr');
-    koreanDayTr.appendChild(document.createElement('th'));
-    const numberDayTr = document.createElement('tr');
-    numberDayTr.appendChild(document.createElement('th'));
-
+  private makeHead(): cellGenerator[][] {
+    const koreanDayCell: cellGenerator[] = [() => { }];
+    const numberDayCell: cellGenerator[] = [() => { }];
     Setting.getExamList().forEach(({ day }, index) => {
-      koreanDayTr.appendChild(
-        $createElementWithText('th', this.koreanDay[index]));
-      numberDayTr.appendChild(
-        $createElementWithText('th', `${this.formatDate(day)}`));
+      koreanDayCell.push(
+        cell => {
+          cell.textContent = this.koreanDay[index];
+        }
+      );
+      numberDayCell.push(
+        cell => {
+          cell.textContent = `${this.formatDate(day)}`;
+        }
+      );
     });
-
-    thead.appendChild(koreanDayTr);
-    thead.appendChild(numberDayTr);
-    return thead;
+    return [koreanDayCell, numberDayCell];
   }
-  private makeBody(): HTMLElement | null {
+  private makeBody(): cellGenerator[][] | null {
     if (Setting.getExamList().length == 0) return null;
-    const tbody = document.createElement('tbody');
+
+    const genses: cellGenerator[][] = [];
     const maxSize = Math.max(...Setting.getExamList().map(exams => exams.subjects.length));
-    const examsByTime: Array<any[]> = new Array(maxSize).fill(null).map(_ => []);
+    const examsByTime: any[][] = new Array(maxSize).fill(null).map(_ => []);
     Setting.getExamList().forEach(exams => examsByTime.forEach((arr, idx) => arr.push(exams.subjects[idx])));
     examsByTime.forEach((exams, index) => {
       const tr = document.createElement('tr');
       tr.appendChild($createElementWithText('th', (index + 1) + '교시'));
+      const gens: cellGenerator[] = [];
+      gens.push(
+        cell => cell.textContent = (index + 1) + '교시');
       for (const subject of exams) {
-        let td;
-        if (subject == undefined) td = $createElementWithText('td', '-');
+        if (subject == undefined) gens.push(cell => cell.textContent = '-');
         else if (subject == SelfStudy) {
-          td = $createElementWithText('td', '자습');
+          gens.push(cell => cell.textContent = '자습');
+        } else {
+          gens.push(cell => {
+            cell.textContent = subject;
+            cell.onclick = () => this.onExamTdClicked(subject);
+          });
         }
-        else {
-          td = $createElementWithText('td', subject);
-          td.onclick = () => this.onExamTdClicked(subject);
-        }
-        tr.appendChild(td);
       }
-      tbody.appendChild(tr);
+      genses.push(gens);
     });
-    return tbody;
+    return genses;
   }
   static reload() {
     const instance = ExamTable.getInstance();
-    const table = document.querySelector('#' + instance.id);
+    let table = document.querySelector('#' + instance.id);
     const body = instance.makeBody();
-    if (body != null)
-      table?.replaceChildren(
-        $createElementWithText('caption', instance.caption),
-        instance.makeHead(),
-        body);
+    body != null
+      && table?.replaceWith(
+        instance.make(instance.makeHead(), body));
   }
 }
 class MoakTestNoti {
@@ -437,4 +503,8 @@ export const load = () => {
   ExamTable.reload();
   MoakTestNoti.reload();
   setInterval(render, 1);
+
+  // const tt = new Table('fff', '오늘').make(['1', '2'], [[(a) => { a.textContent = '11' }]]);
+  // console.log(tt)
+  // document.body.appendChild(tt);
 }
